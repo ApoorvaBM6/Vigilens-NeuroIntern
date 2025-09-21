@@ -4,8 +4,8 @@ import subprocess
 from pylsl import StreamInfo, StreamOutlet, local_clock
 from psychopy import event, visual, core
 from videoRecorder import obtain_fps_opencv, validate_fps
+from experiment_protocol import pyscho_experiment,  main_experiment
 
-   
 '''def setup_labrecorder(recorder_path, output_filename, stream_filter=""):
     try:
         #cmd = [recorder_path, "--file", output_filename, "--streams", stream_filter]
@@ -42,7 +42,7 @@ def setup_labrecorder(recorder_path, output_filename, stream_filter=""):
         print(f"[ERROR] Could not start LabRecorder: {e}")
         return None
     
-def start_video_subprocess(camera_id=0, output_video="output.avi", fps=30):
+def start_video_subprocess(camera_id=0, output_video="output.avi"):
     """
     Start the video recording subprocess.
 
@@ -52,18 +52,18 @@ def start_video_subprocess(camera_id=0, output_video="output.avi", fps=30):
     try: 
         cmd = [
             sys.executable,  # use same Python interpreter
-            "videoRecorder.py", # script to run
+            "D:\France\ISAE\Internship\CodeBase\Experimental_Setup\src/videoRecorder.py", # script to run
             str(camera_id),
-            output_video,
-            str(fps)
+            output_video
         ]
-        print("Starting video subprocess:", " ".join(cmd))
+        print("Starting Video Recording Subprocess:", " ".join(cmd))
         proc = subprocess.Popen(cmd)
-        time.sleep(2)  # give it a moment to start
+
+        time.sleep(5)  # give it a moment to start
         print(f"Video subprocess started, recording to {output_video}")
         return proc
     except Exception as e:
-        print(f"[ERROR] Could not start LabRecorder: {e}")
+        print(f"[ERROR] Could not start VideoRecorder: {e}")
         return None
 
 
@@ -136,15 +136,22 @@ def pyscho_experiment(win, outlet):
 def main():
     print(">>> main() Experimental Program started", flush=True, file=sys.stderr)
     # File paths and parameters
-    output_video_file = r"D:\France\ISAE\Internship\CodeBase\EEG_Blink\data\videoRecordingTest1.avi"
+    output_video_file = r"D:\France\ISAE\Internship\CodeBase\EEG_Blink\data\videoRecordingTest_video_18_pt11.avi"
     recorder_path = r"D:\France\ISAE\Internship\Tools\LabRecorder-1.16.4-Win_amd64\LabRecorder\LabRecorderCLI.exe"
     #output_xfd_filename = r"D:\France\ISAE\Internship\CodeBase\Experimental_Setup\data\session_fp05_09_001.xdf"
-    output_xfd_filename = r"D:\France\ISAE\Internship\CodeBase\EEG_Blink\data\lslRecordingTest1.xdf"
+    output_xfd_filename = r"D:\France\ISAE\Internship\CodeBase\EEG_Blink\data\lslRecordingTest_video_18_pt11.xdf"
     stream_filter = str("name='Collection'")  # can be empty "" for all streams
     #stream_filter = str("name= 'TestStream'")
 
     # Setup Webcam
-    video_proc = start_video_subprocess(camera_id=0, output_video=output_video_file)
+    ### Camera ID might need to be changed depending on your system
+    ## if you no external cameras connected
+    camera_id = 0 # for built-in laptop webcam
+    ## if you have an external USB webcam connected
+    #camera_id = 0 # for external USB webcam
+    #camera_id = 1 # for built-in laptop webcam
+
+    video_proc = start_video_subprocess(camera_id=camera_id, output_video=output_video_file)
     time.sleep(5)  # Give some time for the webcam to initialize
 
     # Setup LSL Marker Stream
@@ -152,21 +159,21 @@ def main():
     time.sleep(10) # Give some time for stream discovery
 
     # Setup Psychopy window
-    win = visual.Window(size= (1920, 1080), color='black')
+    win = visual.Window(fullscr = True, color='black')
 
     # Start LabRecorder via subprocess
     recorder = setup_labrecorder(recorder_path, output_xfd_filename, stream_filter)
 
     # Run the psychopy experiment
-    pyscho_experiment(win, outlet)
+    #pyscho_experiment(win, outlet) # Small protoype experiment
+    main_experiment(win, outlet) # Full experiment
     # Wait a bit to ensure all data is recorded
-    time.sleep(10)
+    #time.sleep(10)
     print("Experiment finished, cleaning up...")
  
     # Cleanup
     stop_video_subprocess(video_proc)
     time.sleep(5)  # ensure subprocess has ended
-    time.sleep(10)  # after experiment
     release_labrecorder(recorder)
     time.sleep(2) 
     win.close()

@@ -30,8 +30,13 @@ def record_video_with_timestamps(
         frame_size = (width, height)
 
     # Video writer (MJPG codec → AVI container)
-    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    #fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # H.264 codec
     writer = cv2.VideoWriter(output_video, fourcc, fps, frame_size)
+    #nadim
+    if not writer.isOpened():
+        print(f"[ERROR] Could not open VideoWriter for {output_video}")
+        cap.release()
 
     # Open CSV file for timestamps
     with open(output_timestamps, mode="w", newline="") as f:
@@ -69,11 +74,16 @@ def record_video_with_timestamps(
 
 def video_recording_lsl(camera_id=0, output_video="output.avi", fps=30, frame_size=None, duration=None):
     """Record video and push frame timestamps to LSL."""
+    
+    print(f"Starting video recording on camera {camera_id} at {fps} FPS", flush=True)
     # Open camera
     cap = cv2.VideoCapture(camera_id)
+    print("Camera opened", flush=True)
     if not cap.isOpened():
         print("[ERROR] Could not open camera", flush=True)
-        sys.exit(1)
+        #sys.exit(1)
+    else:
+        print("Camera opened successfully", flush=True)
 
     cap.set(cv2.CAP_PROP_FPS, fps)
 
@@ -83,8 +93,12 @@ def video_recording_lsl(camera_id=0, output_video="output.avi", fps=30, frame_si
         frame_size = (width, height)
 
     # Video writer
-    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # H.264 codec
     writer = cv2.VideoWriter(output_video, fourcc, fps, frame_size)
+    #nadim
+    if not writer.isOpened():
+        print(f"[ERROR] Could not open VideoWriter for {output_video}")
+        cap.release()
 
     # Create LSL outlet for video timestamps
     info = StreamInfo(name="Collection",
@@ -105,6 +119,7 @@ def video_recording_lsl(camera_id=0, output_video="output.avi", fps=30, frame_si
             break
 
         writer.write(frame)
+        #cv2.imshow('Camera', frame)
 
         # Push frame index to LSL with high-resolution timestamp
         ts = local_clock()
@@ -114,10 +129,12 @@ def video_recording_lsl(camera_id=0, output_video="output.avi", fps=30, frame_si
 
         # Stop after duration if specified
         if duration and (time.time() - start_time) >= duration:
+            print("[INFO] Reached specified duration, stopping recording.", flush=True)
             break
 
     cap.release()
     writer.release()
+    cv2.destroyAllWindows()
     print(f"[INFO] Video saved to {output_video}", flush=True)
 
 
@@ -135,6 +152,7 @@ def validate_fps(obtained_fps, camera_id=0, num_frames=120):
     end = time.time()
 
     cap.release()
+    cv2.destroyAllWindows()
     elapsed = end - start
     fps = num_frames / elapsed if elapsed > 0 else 0
     if abs(fps - obtained_fps) > 0.2:
@@ -151,13 +169,17 @@ def obtain_fps_opencv(camera_id=0):
     # Try to get FPS from camera properties
     fps = cap.get(cv2.CAP_PROP_FPS)
     cap.release()
+    cv2.destroyAllWindows()
     return fps
 
 if __name__ == "__main__":
     import sys
     camera_id = int(sys.argv[1])
     output_video = sys.argv[2]
-    provided_fps = float(sys.argv[3])
+    if len(sys.argv) > 3:
+        provided_fps = float(sys.argv[3])
+    else:
+        provided_fps = 30.0  # default FPS
     print(f"Camera ID: {camera_id}, Output Video: {output_video}, FPS: {provided_fps}", flush=True)
     if provided_fps == None or provided_fps <= 0:
         print("[INFO] No valid FPS provided, attempting to obtain from camera...", flush=True)
@@ -171,7 +193,7 @@ if __name__ == "__main__":
     print(f"Using FPS: {fps:.3f}")
 
     video_recording_lsl(
-        camera_id=0,
+        camera_id=camera_id,
         output_video=output_video,
         fps=fps
     )
