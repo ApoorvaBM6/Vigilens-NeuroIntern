@@ -1,0 +1,17 @@
+name: eeg_video
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10  
+  - pip
+  - numpy=2.2.6 
+  - scipy=1.15.3 
+  - pip:
+      - psychopy==2025.1.1  # latest stable PsychoPy version compatible with Python 3.10 and OpenCV
+      - mne==1.5.2
+      - opencv-python==4.12.0.88  
+      - pylsl==1.16.2
+      - matplotlib
+      - tqdm
+
