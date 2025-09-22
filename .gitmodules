@@ -1,0 +1,3 @@
+[submodule "CodeBase/Eye_Blink_Detector"]
+	path = CodeBase/Eye_Blink_Detector
+	url = https://github.com/<username>/<Eye_Blink_Detector_repo>.git
