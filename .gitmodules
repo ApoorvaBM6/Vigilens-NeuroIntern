@@ -1,3 +1,6 @@
 [submodule "CodeBase/Eye_Blink_Detector"]
 	path = CodeBase/Eye_Blink_Detector
 	url = https://github.com/<username>/<Eye_Blink_Detector_repo>.git
+[submodule "CodeBase/Experimental_Setup_Matlab"]
+	path = CodeBase/Experimental_Setup_Matlab
+	url = https://github.com/<username>/<Experimental_Setup_Matlab_repo>.git
